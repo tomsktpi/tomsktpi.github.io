@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+.tab label {
+  background-color: inherit;
+  float: left;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  padding: 12px 150px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+
+.block {
+      display: block;
+}
+input {
+width: 50px;
+}
+
+.right {
+  float: right;
+}
+.center {	
+  text-align: center;
+}
+.table1-box, .table2-box{
+	display:inline-grid;
+}
+b {
+	color:red;
+	display:inline-grid;
+}
+table, th, td {
+  border: 1px #ccc;
+  border-collapse: collapse;
+  border-style: groove;
+}
+
+</style>
+<script type="text/javascript">
+
+
+
+function openTab(evt, tabName) {
+  // Declare all variables
+  var i, tabcontent, tablinks;
+
+  // Get all elements with class="tabcontent" and hide them
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+
+  // Get all elements with class="tablinks" and remove the class "active"
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+
+  // Show the current tab, and add an "active" class to the button that opened the tab
+  document.getElementById(tabName).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+
+function getLevelForCount(name){
+	var result = "";
+	for (var i = 0; i < 4; i++) {
+		result = result + document.querySelector('input[name="' + name + '_' + i + '"]:checked').value
+	}
+	return "0x" +  parseInt(result,2).toString(16).padStart(2, '0').toUpperCase();
+}
+function generateVcomLut(){
+	var string ="";
+	for (var a = 0; a < 7; a++) {
+		string = string + getLevelForCount("level_"+a);
+
+		for (var i = 0; i < 4; i++) {
+			var value = document.querySelector('input[id="frames_' + a + '_' + i + '"]').value;
+			if (value < 0 || value > 255)
+				value = 255;
+			string =string +  ", 0x" +  parseInt(value).toString(16).padStart(2, '0').toUpperCase();
+		}
+		var value = document.querySelector('input[id="TTR_' +a + '"]').value;
+		if (value < 0 || value > 255)
+				value = 255;
+		string =string +  ", 0x" +  parseInt(value).toString(16).padStart(2, '0').toUpperCase();
+	
+		string = string+ ',\r\n';
+
+	}
+	var value = document.querySelector('select[id="ST_XON"]').value;
+	string =string +  "0x" +  parseInt(value).toString(16).padStart(2, '0').toUpperCase();
+	value = document.querySelector('select[id="ST_CHV"]').value;
+	string =string +  ", 0x" +  parseInt(value).toString(16).padStart(2, '0').toUpperCase();
+	
+	document.getElementById("vcomlut").value = string;
+}
+function generateLut(){
+	var string ="";
+	for (var a = 0; a < 7; a++) {
+		string = string + getLevelForCount("llevel_"+a);
+
+		for (var i = 0; i < 4; i++) {
+			var value = document.querySelector('input[id="lframes_' + a + '_' + i + '"]').value
+			if (value < 0 || value > 255)
+				value = 255;
+			string =string +  ", 0x" +  parseInt(value).toString(16).padStart(2, '0').toUpperCase();
+		}
+		var value = document.querySelector('input[id="lTTR_' +a + '"]').value;
+		if (value < 0 || value > 255)
+				value = 255;
+		string =string +  ", 0x" +  parseInt(value).toString(16).padStart(2, '0').toUpperCase();
+	
+		string = string + (a<6 ? ',\r\n' : '');
+
+	}
+	
+	document.getElementById("llut").value = string;
+	drawLut();
+}
+
+function loadInit(){
+	var table = document.getElementById("vcom_lut_Table_Body");
+	for (var i = 0; i < 7; i++) {
+		insertVcomPhaseX(table, i);
+	}
+	var row = table.insertRow();
+	row.innerHTML = "<td>ST_XON</td><td colspan=\"5\"><select name=\"ST_XON\" id=\"ST_XON\"><option value=\"0\"> no All Gate ON </option><option value=\"1\">State-1 All Gate ON</option><option value=\"2\">State-1 and State2 All Gate ON </option></select></td>";
+	row = table.insertRow();
+	row.innerHTML = "<td>ST_CHV</td><td colspan=\"5\"><select name=\"ST_CHV\" id=\"ST_CHV\"><option value=\"0\">no VCOM High Voltage </option><option value=\"1\">State-1 VCOM High Voltage</option><option value=\"2\">State-1 and State2 VCOM High Voltage</option></select></td>";
+	
+	
+	table = document.getElementById("lut_Table_Body");
+	for (var i = 0; i < 7; i++) {
+		insertLutPhaseX(table, i);
+	}	
+	
+}
+
+var vcom_id = {0:"01", 1:"00", 2:"10", 3:"11"};
+
+function getVcomLeveCellRadio(name, a){
+
+	return "<div><input type=\"radio\" name=\""+name+"\" value=\""+vcom_id[a]+"\" "+(a==1? "checked=\"checked\"":"")+" ></dev>";
+}
+
+function getVcomLevelCell(i, e){
+	var result = "";
+	for (var a = 0; a < 4; a++) {
+		result=result+getVcomLeveCellRadio("level_"+i+"_"+e, a);
+	}
+	
+ return result;
+}
+
+function getLeveCellRadio(name, a){
+
+	return "<div><input type=\"radio\" name=\""+name+"\" value=\""+vcom_id[a]+"\" "+(a==1? "checked=\"checked\"":"")+" ></dev>";
+}
+function getLevelCell(i, e){
+	var result = "";
+	for (var a = 0; a < 3; a++) {
+		result=result+getLeveCellRadio("llevel_"+i+"_"+e, a);
+	}
+	
+ return result;
+}
+function insertLutPhaseX(table, i){ 
+	
+	var row = table.insertRow();
+	var innerText = "<td rowspan=\"3\">"+i+"</td><td>Times to repeat all</td><td colspan=\"4\" class=\"center\"><input id=\"lTTR_"+i+"\" type=\"number\"/ value=\"0\"></td>";
+	row.innerHTML = innerText;
+	row = table.insertRow();
+	frm = row.insertCell(0);
+	frm.innerHTML="01: VCOMH<br/>00b: GROUND<br/>10b: VCOML"
+	frm = row.insertCell(1);
+	frm.innerHTML = getLevelCell(i, 0);
+	frm = row.insertCell(2);
+	frm.innerHTML = getLevelCell(i, 1);
+	frm = row.insertCell(3);
+	frm.innerHTML = getLevelCell(i, 2);
+	frm = row.insertCell(4);
+	frm.innerHTML = getLevelCell(i, 3);
+	row = table.insertRow();
+	frm = row.insertCell(0);
+	frm.innerHTML = "Time for frame";
+	frm = row.insertCell(1);
+	frm.innerHTML = "<input id=\"lframes_"+i+"_0\" class=\"right\" type=\"number\" value=\"0\"/>"
+	frm = row.insertCell(2);
+	frm.innerHTML = "<input id=\"lframes_"+i+"_1\" type=\"number\" value=\"0\"/>"
+	frm = row.insertCell(3);
+	frm.innerHTML = "<input id=\"lframes_"+i+"_2\" type=\"number\" value=\"0\"/>"
+	frm = row.insertCell(4);
+	frm.innerHTML = "<input id=\"lframes_"+i+"_3\" type=\"number\" value=\"0\"/>"
+
+}
+
+function insertVcomPhaseX(table, i){ 
+	
+	var row = table.insertRow();
+	var innerText = "<td rowspan=\"3\">"+i+"</td><td>Times to repeat all</td><td colspan=\"4\" class=\"center\"><input id=\"TTR_"+i+"\" type=\"number\"/ value=\"0\"></td>";
+	row.innerHTML = innerText;
+	row = table.insertRow();
+	frm = row.insertCell(0);
+	frm.innerHTML="01b: VDH+VCM_DC (VCOMH)<br/>00b: VCM_DC<br/>10b: VDL+VCM_DC (VCOML)<br/>11b: Floating"
+	frm = row.insertCell(1);
+	frm.innerHTML = getVcomLevelCell(i, 0);
+	frm = row.insertCell(2);
+	frm.innerHTML = getVcomLevelCell(i, 1);
+	frm = row.insertCell(3);
+	frm.innerHTML = getVcomLevelCell(i, 2);
+	frm = row.insertCell(4);
+	frm.innerHTML = getVcomLevelCell(i, 3);
+	row = table.insertRow();
+	frm = row.insertCell(0);
+	frm.innerHTML = "Number of frames  ";
+	frm = row.insertCell(1);
+	frm.innerHTML = "<input id=\"frames_"+i+"_0\" class=\"right\" type=\"number\" value=\"0\"/>"
+	frm = row.insertCell(2);
+	frm.innerHTML = "<input id=\"frames_"+i+"_1\" type=\"number\" value=\"0\"/>"
+	frm = row.insertCell(3);
+	frm.innerHTML = "<input id=\"frames_"+i+"_2\" type=\"number\" value=\"0\"/>"
+	frm = row.insertCell(4);
+	frm.innerHTML = "<input id=\"frames_"+i+"_3\" type=\"number\" value=\"0\"/>"
+
+}
+
+function hex2bin(hex){
+    return (parseInt(hex, 16).toString(2)).padStart(8, '0');
+}
+
+function setLutLevel(name, value){
+	var radios = document.querySelectorAll('input[name="' + name + '"');
+	for (var i = 0; i < radios.length; i++) {
+		input = radios[i];
+		if (input.value == value) {
+			input.checked = "checked";
+		}
+	}
+}
+
+function loadLutLevel(name, val){
+	var levels = hex2bin(val.trim().substr(2,2));
+	var e = levels.split("");
+	c = 0;
+	for (var i = 0; i < 7 ;i=i+2) {
+		setLutLevel( name + "_" + c, e[i]+e[i+1]);
+		c++;
+	 }
+}
+
+function setFrameLength(name, value){
+	document.querySelector('input[id="' + name + '"').value = parseInt(value, 16);
+}
+
+function parseLut(){
+
+	var input = document.getElementById("llut").value.replace(/,\s*$/s, "");
+	
+	if (input.length == 0)
+		return;
+	
+	var arr = input.split(",");
+	
+	if (arr.length != 42){
+		alert("Lut only 42 bytes");
+		return;
+	}
+	for (var i = 0; i < 7; i++) {
+		loadLutLevel("llevel_" + i, arr[i*6]);
+		setFrameLength("lframes_" + i + "_0" , arr[i*6+1]);
+		setFrameLength("lframes_" + i + "_1" , arr[i*6+2]);
+		setFrameLength("lframes_" + i + "_2" , arr[i*6+3]);
+		setFrameLength("lframes_" + i + "_3" , arr[i*6+4]);
+		setFrameLength("lTTR_" + i, arr[i*6+5]);
+	}
+	drawLut();
+}
+
+function parseVcomLut(){
+
+	var input = document.getElementById("vcomlut").value.replace(/,\s*$/s, "");
+	if (input.length == 0)
+		return;
+	var arr = input.split(",");
+	
+	if (arr.length != 44){
+		alert("Vcom only 44 bytes");
+		return;
+	}
+	for (var i = 0; i < 7; i++) {
+		loadLutLevel("level_" + i, arr[i*6]);
+		setFrameLength("frames_" + i + "_0" , arr[i*6+1]);
+		setFrameLength("frames_" + i + "_1" , arr[i*6+2]);
+		setFrameLength("frames_" + i + "_2" , arr[i*6+3]);
+		setFrameLength("frames_" + i + "_3" , arr[i*6+4]);
+		setFrameLength("TTR_" + i, arr[i*6+5]);
+	}
+	document.querySelector('select[id="ST_XON"').value = parseInt(arr[42], 16);
+	document.querySelector('select[id="ST_CHV"').value = parseInt(arr[43], 16);
+}
+/*********************************************************/
+function getLevelForCount1(name){
+	var result = "";
+	for (var i = 0; i < 4; i++) {
+		result = result + document.querySelector('input[name="' + name + '_' + i + '"]:checked').value
+	}
+	return "0x" +  parseInt(result,2).toString(16).padStart(2, '0').toUpperCase();
+}
+
+function generateLut1(){
+	var string ="";
+	for (var a = 0; a < 7; a++) {
+		string = string + getLevelForCount("llevel_"+a);
+
+		for (var i = 0; i < 4; i++) {
+			var value = document.querySelector('input[id="lframes_' + a + '_' + i + '"]').value
+			string =string +  ", 0x" +  parseInt(value).toString(16).padStart(2, '0').toUpperCase();
+		}
+		var value = document.querySelector('input[id="lTTR_' +a + '"]').value;
+		string =string +  ", 0x" +  parseInt(value).toString(16).padStart(2, '0').toUpperCase();
+	
+		string = string + (a<6 ? ',\r\n' : '');
+
+	}
+	
+	document.getElementById("llut").value = string;
+	drawLut();
+}
+
+var level_pos = {"00":80, "01":40, "10":120};
+
+function drawLut(){
+
+	var size = document.querySelector('input[id="sizeLutDrw"]').value;
+	
+	if (size < 1 || size > 20)
+		size = 3;
+
+	var c = document.getElementById("myCanvas");
+	var ctx = c.getContext("2d");
+	ctx.clearRect(0, 0, c.width, c.height);
+	ctx.strokeStyle = "#000000";
+	ctx.setLineDash([5, 3]);
+	ctx.beginPath();
+	ctx.moveTo(0, 80);
+	ctx.lineTo(700, 80);//right(x) down(y)
+	ctx.stroke();
+	
+	ctx.setLineDash([]);
+	ctx.strokeStyle = "#FF0000";
+
+	var level = 80;	
+	var time = 0;
+	var currentTime = 1;
+	var posPhas = [];
+	var phasArr = [];
+
+	ctx.beginPath();
+	ctx.moveTo(currentTime, level);
+	
+	for (var a = 0; a < 7; a++) {
+	
+		var repeat = document.querySelector('input[id="lTTR_' + a + '"]').value;
+		if (repeat < 0 || repeat > 255)
+			repeat = 255;
+		for (var r = 0; r < repeat ; r++) {
+			for (var i = 0; i < 4; i++) {
+
+				level = level_pos[document.querySelector('input[name="llevel_' + a + '_' + i + '"]:checked').value];
+				time = document.querySelector('input[id="lframes_' + a + '_' + i + '"]').value * size;
+				if (time < 0 || time > 255)
+					time = 255;
+				if (time == 0)
+					continue;				
+				ctx.lineTo(currentTime, level);
+				currentTime = currentTime + time;
+				ctx.lineTo(currentTime, level);
+				
+				var phasVal=[];
+				phasVal.push(level-40);
+				phasVal.push(currentTime);
+				phasArr.push(phasVal);
+			}
+		}
+		posPhas.push(currentTime);
+	}
+	ctx.lineTo(currentTime, 80);
+	ctx.stroke();
+	
+	ctx.strokeStyle = "green";
+	ctx.setLineDash([5, 3]);
+	
+	ctx.fillText("+15", 10, 50);
+	ctx.fillText("-15", 10, 115);
+	
+	var lastPos = 0;
+
+	for (var a = 0; a < 7; a++) {
+		if (posPhas[a] == lastPos){
+			continue;
+		}
+	
+		ctx.beginPath();
+		ctx.moveTo(posPhas[a], 20);
+		ctx.lineTo(posPhas[a], 130);
+		ctx.stroke();
+		ctx.fillText(a, posPhas[a]-2, 140);
+		ctx.fillText((posPhas[a]-1) / size, posPhas[a]-7, 160);
+		lastPos = posPhas[a];
+	}
+	
+	drawVcomLut(ctx, size, phasArr);
+}
+
+var vcom_level_pos = {"00":280, "01":240, "10":320};
+
+function drawVcomLut(ctx, size, phasLutArr){
+	ctx.strokeStyle = "#000000";
+	ctx.setLineDash([5, 3]);
+	ctx.beginPath();
+	ctx.moveTo(0, 280);
+	ctx.lineTo(700, 280);//right(x) down(y)
+	ctx.stroke();
+	
+	ctx.setLineDash([]);
+	ctx.strokeStyle = "#FF0000";
+	
+	var level = 280;	
+	var time = 0;
+	var currentTime = 1;
+	var posPhas = [];
+	var phasArr = [];
+
+
+	ctx.beginPath();
+	ctx.moveTo(currentTime, level);
+	for (var a = 0; a < 7; a++) {
+	
+		var repeat = document.querySelector('input[id="TTR_' + a + '"]').value;
+		if (repeat < 0 || repeat > 255)
+			repeat = 255;
+		for (var r = 0; r < repeat ; r++) {
+			for (var i = 0; i < 4; i++) {
+
+				level = vcom_level_pos[document.querySelector('input[name="level_' + a + '_' + i + '"]:checked').value];
+				time = document.querySelector('input[id="frames_' + a + '_' + i + '"]').value * size;
+				if (time < 0 || time > 255)
+					time = 255;
+					
+					
+				if (time == 0)
+					continue;				
+				ctx.lineTo(currentTime, level);
+				currentTime = currentTime + time;
+				ctx.lineTo(currentTime, level);
+				
+				var phasVal=[];
+				phasVal.push(level - 240);
+				phasVal.push(currentTime);
+				phasArr.push(phasVal);
+			}
+		}
+		posPhas.push(currentTime);
+	}
+	ctx.lineTo(currentTime, 280);
+	ctx.stroke();
+	
+	ctx.strokeStyle = "green";
+	ctx.setLineDash([5, 3]);
+
+	ctx.fillText("VCOM", 10, 200);
+	
+	ctx.fillText("+15", 10, 250);
+	ctx.fillText("-15", 10, 315);
+
+	
+	var lastPos = 0;
+
+	for (var a = 0; a < 7; a++) {
+		if (posPhas[a] == lastPos){
+			continue;
+		}
+	
+		ctx.beginPath();
+		ctx.moveTo(posPhas[a], 220);
+		ctx.lineTo(posPhas[a], 330);
+		ctx.stroke();
+		ctx.fillText(a, posPhas[a]-2, 340);
+		ctx.fillText((posPhas[a]-1) / size, posPhas[a]-7, 360);
+		lastPos = posPhas[a];
+	}
+	drawDifference(ctx, phasLutArr, phasArr);
+	
+}
+function drawDifference(ctx, phasLutArr, phasVcomArr){
+
+	//if (phasLutArr.length < 1 || phasVcomArr.length < 1);
+	//return;
+
+	var center = 480;
+	ctx.strokeStyle = "#000000";
+	ctx.setLineDash([5, 3]);
+	ctx.beginPath();
+	ctx.moveTo(0, center);
+	ctx.lineTo(700, center);//right(x) down(y)
+	ctx.stroke();
+	
+	ctx.setLineDash([]);
+	ctx.strokeStyle = "#FF0000";
+	
+	lastPos = 2;
+	var calcPos = -1;
+	var levelCalc = 0;
+
+	var newArr = [];
+	
+	var val1 = phasLutArr[0];
+	var val2 = phasVcomArr[0];
+	
+	var counter1 = 1;
+	var counter2 = 1;
+
+	
+	while(true){
+
+		if (parseInt(val1[1]) < parseInt(val2[1]) ){
+			var newVal=[];
+			newVal.push(val1[0] - val2[0]);
+			newVal.push(val1[1]);
+			newArr.push(newVal);
+			console.log(val1[1] +" < "+ val2[1]);
+			val1 = getValue(counter1, phasLutArr);
+			if (val1[1] == 0) {
+				break;
+			}
+			counter1++;
+		}else 	if (val1[1] > val2[1] ){
+			var newVal=[];
+			newVal.push(val1[0] - val2[0]);
+			newVal.push(val2[1]);
+			newArr.push(newVal);
+			console.log(val1[1] +" > "+ val2[1]);
+			val2 = getValue(counter2, phasVcomArr);
+			if (val2[1] == 0) {
+				break;
+			}
+			counter2++;
+		}else{
+			var newVal=[];
+			newVal.push(val1[0] - val2[0]);
+			newVal.push(val1[1]);
+			newArr.push(newVal);
+			val1 = getValue(counter1, phasLutArr);
+			val2 = getValue(counter2, phasVcomArr);			
+			if (val1[1]==0 || val2[1]==0)
+				break;
+			
+			counter1++;
+			counter2++;
+			
+			continue;
+		}
+		
+	}
+
+	var lastPos = 0;
+
+	var level = 0;
+	var time = 0;
+	
+	var currentTime = 1;
+	
+	ctx.beginPath();
+	ctx.moveTo(currentTime, center);
+
+	for (var a = 0; a < newArr.length; a++) {
+		level = center + newArr[a][0];
+		time = newArr[a][1];
+		
+		if (time == currentTime)
+			continue;				
+		ctx.lineTo(currentTime, level);
+		currentTime = time;
+		ctx.lineTo(currentTime, level);
+	}
+	ctx.lineTo(currentTime, center);
+	ctx.stroke();
+}
+
+function getValue(indx, arr){
+	if (indx > arr.length -1){
+		return [480,0];	
+	}
+
+	return arr[indx];
+	
+}
+
+
+</script>
+</head>
+<body>
+<div class="tab">
+  <button class="tablinks" onclick="openTab(event, 'lut')">Source LUT</button>
+  <button class="tablinks" onclick="openTab(event, 'vcom_lut')">VCOM LUT</button>
+  <button class="tablinks" onclick="openTab(event, 'pica')">picture</button>
+  <a href="https://www.e-paper-display.com/IL0373990b.pdf"><label>IL0373990b</label></a>
+</div>
+<div id="lut" class="tabcontent">
+	<div class="table1-box">
+		<table id="lut_Table">
+		  <thead>
+			<tr>
+			  <th>LUT</th>
+			  <th colspan="5">(R21H) (R22H) (R23H) (R24H)</th>
+			</tr>
+		  </thead>
+		  <tbody id="lut_Table_Body"></tbody>
+		</table>
+	</div>
+	<div class="table2-box">
+		<button onclick="generateLut()">Generate LUT</button><br/>
+		<p>const unsigned char VCOM_LUT_R20H [42] = { <b>// need 43</b></p>
+		<br/>
+		<textarea id="llut" rows="10" cols="70">
+0x40, 0x17, 0x00, 0x00, 0x00, 0x02,
+0x90, 0x0F, 0x0F, 0x00, 0x00, 0x01,
+0x40, 0x0A, 0x00, 0x00, 0x00, 0x02,
+0xA0, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+		</textarea>
+		<button onclick="parseLut()">Parse LUT</button><br/>
+		<label>Resize: </label><input id="sizeLutDrw" type="number" value="3"/>
+		<br/>
+		<canvas id="myCanvas" width="700" height="600" style="border:1px solid #d3d3d3;">
+			Your browser does not support the HTML5 canvas tag.
+		</canvas>
+	 </div>
+  
+</div>
+<div id="vcom_lut" class="tabcontent">
+	<div class="table1-box">
+		<table id="vcom_lut_Table">
+		  <thead>
+			<tr>
+			  <th>LUT</th>
+			  <th colspan="5">VCOM</th>
+			</tr>
+		  </thead>
+		  <tbody id="vcom_lut_Table_Body"></tbody>
+		</table>
+	</div>
+	<div class="table2-box">
+		<button onclick="generateVcomLut()">Generate VCOM LUT </button><br/>
+		<p>const unsigned char VCOM_LUT_R20H [44] = {<b>// need 45</b></p>
+		<br/>
+		<textarea id="vcomlut" rows="10" cols="50">
+    0x00, 0x08, 0x00, 0x00, 0x00, 0x02,
+    0x60, 0x28, 0x28, 0x00, 0x00, 0x01,
+    0x00, 0x14, 0x00, 0x00, 0x00, 0x01,
+    0x00, 0x12, 0x12, 0x00, 0x00, 0x01,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00,
+		</textarea>
+		<button onclick="parseVcomLut()">Parse LUT</button><br/>
+		
+	  </div>
+  
+</div>
+<div id="pica" class="tabcontent">
+<img src="Lut.png"/>
+</div>
+<script>
+	loadInit();
+</script>
+</body>
+</html>

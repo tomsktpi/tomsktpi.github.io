@@ -1,0 +1,18 @@
+from here https://stackoverflow.com/questions/36721830/convert-hsl-to-rgb-and-hex/54014428#54014428
+
+RGB:
+
+to HK:
+
+let hexStr2rgb  = (hexStr) => hexStr.substr(1).match(/../g).map(x=>parseInt(`0x${x}`)/255);
+let  rgb2hsl = (r,g,b, a=Math.max(r,g,b), n=a-Math.min(r,g,b), f=(1-Math.abs(a+a-n-1)) , h= n && ((a==r) ? (g-b)/n : ((a==g) ? 2+(b-r)/n : 4+(r-g)/n))) => [60*(h<0?h+6:h), f ? n/f : 0, (a+a-n)/2];
+
+return Math.round(rgb2hsl(...hexStr2rgb(value))[0]);
+
+
+from HK:
+
+let hsl2rgb = (h,s,l, a=s*Math.min(l,1-l), f= (n,k=(n+h/30)%12) => l - a*Math.max(Math.min(k-3,9-k,1),-1)) => [f(0), f(8), f(4)];
+let rgb2hex = (r,g,b) => "#" + [r,g,b].map(x=>Math.round(x*255).toString(16).padStart(2,0) ).join('').toUpperCase();
+
+return rgb2hex(...hsl2rgb(value,1,0.5));
