@@ -3,65 +3,27 @@
 <head>
 <style>
 
-/* Style the tab */
-.tab {
-  overflow: hidden;
-  border: 1px solid #ccc;
-  background-color: #f1f1f1;
-}
 
-/* Style the buttons that are used to open the tab content */
-.tab button {
-  background-color: inherit;
-  float: left;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 14px 16px;
-  transition: 0.3s;
-}
-.tab label {
-  background-color: inherit;
-  float: left;
-  border: none;
-  cursor: pointer;
-  outline: none;
-  padding: 12px 150px;
-}
 
-/* Change background color of buttons on hover */
-.tab button:hover {
-  background-color: #ddd;
-}
-
-/* Create an active/current tablink class */
-.tab button.active {
-  background-color: #ccc;
-}
-
-/* Style the tab content */
-.tabcontent {
-  display: none;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-top: none;
-}
 
 .block {
-      display: block;
+   display: block;
 }
 input {
-width: 50px;
+	width: 50px;
 }
-
+.right-side1{
+  align-items: right;
+}
 .right {
   float: right;
 }
 .center {	
   text-align: center;
+  background-color: lightgray;
 }
-.table1-box, .table2-box{
-	display:inline-grid;
+.head{
+	background-color: gray;
 }
 b {
 	color:red;
@@ -71,33 +33,30 @@ table, th, td {
   border: 1px #ccc;
   border-collapse: collapse;
   border-style: groove;
+  white-space: pre;
 }
 
+.Row {
+    display: table;
+    //width: 100%; /*Optional*/
+    table-layout: fixed; /*Optional*/
+    border-spacing: 10px; /*Optional*/
+}
+.Column {
+    display: table-cell;
+}
+label {
+   white-space: pre;
+}
+
+.tabcontent{
+	width: 60%;
+}
 </style>
 <script type="text/javascript">
 
 
 
-function openTab(evt, tabName) {
-  // Declare all variables
-  var i, tabcontent, tablinks;
-
-  // Get all elements with class="tabcontent" and hide them
-  tabcontent = document.getElementsByClassName("tabcontent");
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
-  }
-
-  // Get all elements with class="tablinks" and remove the class "active"
-  tablinks = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
-  }
-
-  // Show the current tab, and add an "active" class to the button that opened the tab
-  document.getElementById(tabName).style.display = "block";
-  evt.currentTarget.className += " active";
-}
 
 function getLevelForCount(name){
 	var result = "";
@@ -162,9 +121,9 @@ function loadInit(){
 		insertVcomPhaseX(table, i);
 	}
 	var row = table.insertRow();
-	row.innerHTML = "<td>ST_XON</td><td colspan=\"5\"><select name=\"ST_XON\" id=\"ST_XON\"><option value=\"0\"> no All Gate ON </option><option value=\"1\">State-1 All Gate ON</option><option value=\"2\">State-1 and State2 All Gate ON </option></select></td>";
+	row.innerHTML = "<td> </td><td>ST_XON</td><td colspan=\"4\"><select name=\"ST_XON\" id=\"ST_XON\"><option value=\"0\"> no All Gate ON </option><option value=\"1\">State-1 All Gate ON</option><option value=\"2\">State-1 and State2 All Gate ON </option></select></td>";
 	row = table.insertRow();
-	row.innerHTML = "<td>ST_CHV</td><td colspan=\"5\"><select name=\"ST_CHV\" id=\"ST_CHV\"><option value=\"0\">no VCOM High Voltage </option><option value=\"1\">State-1 VCOM High Voltage</option><option value=\"2\">State-1 and State2 VCOM High Voltage</option></select></td>";
+	row.innerHTML = "<td> </td><td>ST_CHV</td><td colspan=\"4\"><select name=\"ST_CHV\" id=\"ST_CHV\"><option value=\"0\">no VCOM High Voltage </option><option value=\"1\">State-1 VCOM High Voltage</option><option value=\"2\">State-1 and State2 VCOM High Voltage</option></select></td>";
 	
 	
 	table = document.getElementById("lut_Table_Body");
@@ -190,26 +149,27 @@ function getVcomLevelCell(i, e){
  return result;
 }
 
+var vd_id = {1:"01", 2:"00", 3:"10", 0:"11"};
+
 function getLeveCellRadio(name, a){
 
-	return "<div><input type=\"radio\" name=\""+name+"\" value=\""+vcom_id[a]+"\" "+(a==1? "checked=\"checked\"":"")+" ></dev>";
+	return "<div><input type=\"radio\" name=\""+name+"\" value=\""+vd_id[a]+"\" "+(a==1? "checked=\"checked\"":"")+" ></dev>";
 }
 function getLevelCell(i, e){
 	var result = "";
-	for (var a = 0; a < 3; a++) {
+	for (var a = 0; a < 4; a++) {
 		result=result+getLeveCellRadio("llevel_"+i+"_"+e, a);
 	}
-	
  return result;
 }
 function insertLutPhaseX(table, i){ 
 	
 	var row = table.insertRow();
-	var innerText = "<td rowspan=\"3\">"+i+"</td><td>Times to repeat all</td><td colspan=\"4\" class=\"center\"><input id=\"lTTR_"+i+"\" type=\"number\"/ value=\"0\"></td>";
+	var innerText = "<td rowspan=\"3\">"+i+"</td><td>Group repeat</td><td colspan=\"4\" class=\"center\"><input id=\"lTTR_"+i+"\" type=\"number\"/ value=\"0\"> times</td>";
 	row.innerHTML = innerText;
 	row = table.insertRow();
 	frm = row.insertCell(0);
-	frm.innerHTML="01: VCOMH<br/>00b: GROUND<br/>10b: VCOML"
+	frm.innerHTML="<label title=\"Positive source driver voltage for Red (+2.4V ~ +11V)\">11: VDHR</label><br/><label title=\"(VSH) Positive source driver Voltage (+2.4V ~ +11V)\">01: VDH</label><br/><label>00: GND</label><br/><label title=\"(VSL) Negative source driver voltage (-2.4V ~ -11V) \">10: VDL</label>"
 	frm = row.insertCell(1);
 	frm.innerHTML = getLevelCell(i, 0);
 	frm = row.insertCell(2);
@@ -220,7 +180,7 @@ function insertLutPhaseX(table, i){
 	frm.innerHTML = getLevelCell(i, 3);
 	row = table.insertRow();
 	frm = row.insertCell(0);
-	frm.innerHTML = "Time for frame";
+	frm.innerHTML = "Frame time";
 	frm = row.insertCell(1);
 	frm.innerHTML = "<input id=\"lframes_"+i+"_0\" class=\"right\" type=\"number\" value=\"0\"/>"
 	frm = row.insertCell(2);
@@ -235,11 +195,11 @@ function insertLutPhaseX(table, i){
 function insertVcomPhaseX(table, i){ 
 	
 	var row = table.insertRow();
-	var innerText = "<td rowspan=\"3\">"+i+"</td><td>Times to repeat all</td><td colspan=\"4\" class=\"center\"><input id=\"TTR_"+i+"\" type=\"number\"/ value=\"0\"></td>";
+	var innerText = "<td rowspan=\"3\">"+i+"</td><td class=\"center\">Group repeat</td><td colspan=\"4\" class=\"center\"><input id=\"TTR_"+i+"\" type=\"number\"/ value=\"0\"> times</td>";
 	row.innerHTML = innerText;
 	row = table.insertRow();
 	frm = row.insertCell(0);
-	frm.innerHTML="01b: VDH+VCM_DC (VCOMH)<br/>00b: VCM_DC<br/>10b: VDL+VCM_DC (VCOML)<br/>11b: Floating"
+	frm.innerHTML="<label title=\"VDH+VCM_DC (VCOMH)\">01: VCOMH</label><br/><label title=\"VCM_DC\">00: VDCS</label><br/><label title=\"VDL+VCM_DC (VCOML)\">10: VCOML</label><br/><label title=\"Floating\">11: ~</label>"
 	frm = row.insertCell(1);
 	frm.innerHTML = getVcomLevelCell(i, 0);
 	frm = row.insertCell(2);
@@ -250,7 +210,7 @@ function insertVcomPhaseX(table, i){
 	frm.innerHTML = getVcomLevelCell(i, 3);
 	row = table.insertRow();
 	frm = row.insertCell(0);
-	frm.innerHTML = "Number of frames  ";
+	frm.innerHTML = "Frame time";
 	frm = row.insertCell(1);
 	frm.innerHTML = "<input id=\"frames_"+i+"_0\" class=\"right\" type=\"number\" value=\"0\"/>"
 	frm = row.insertCell(2);
@@ -365,7 +325,7 @@ function generateLut1(){
 	drawLut();
 }
 
-var level_pos = {"00":80, "01":40, "10":120};
+var level_pos = {"00":80, "01":40, "10":120, "11":40,};
 
 function drawLut(){
 
@@ -381,7 +341,7 @@ function drawLut(){
 	ctx.setLineDash([5, 3]);
 	ctx.beginPath();
 	ctx.moveTo(0, 80);
-	ctx.lineTo(700, 80);//right(x) down(y)
+	ctx.lineTo(650, 80);//right(x) down(y)
 	ctx.stroke();
 	
 	ctx.setLineDash([]);
@@ -457,7 +417,7 @@ function drawVcomLut(ctx, size, phasLutArr){
 	ctx.setLineDash([5, 3]);
 	ctx.beginPath();
 	ctx.moveTo(0, 280);
-	ctx.lineTo(700, 280);//right(x) down(y)
+	ctx.lineTo(650, 280);//right(x) down(y)
 	ctx.stroke();
 	
 	ctx.setLineDash([]);
@@ -540,7 +500,7 @@ function drawDifference(ctx, phasLutArr, phasVcomArr){
 	ctx.setLineDash([5, 3]);
 	ctx.beginPath();
 	ctx.moveTo(0, center);
-	ctx.lineTo(700, center);//right(x) down(y)
+	ctx.lineTo(650, center);//right(x) down(y)
 	ctx.stroke();
 	
 	ctx.setLineDash([]);
@@ -638,63 +598,62 @@ function getValue(indx, arr){
 </script>
 </head>
 <body>
-<div class="tab">
-  <button class="tablinks" onclick="openTab(event, 'lut')">Source LUT</button>
-  <button class="tablinks" onclick="openTab(event, 'vcom_lut')">VCOM LUT</button>
-  <button class="tablinks" onclick="openTab(event, 'pica')">picture</button>
-  <a href="https://www.e-paper-display.com/IL0373990b.pdf"><label>IL0373990b</label></a>
-</div>
-<div id="lut" class="tabcontent">
-	<div class="table1-box">
-		<table id="lut_Table">
-		  <thead>
-			<tr>
-			  <th>LUT</th>
-			  <th colspan="5">(R21H) (R22H) (R23H) (R24H)</th>
-			</tr>
-		  </thead>
-		  <tbody id="lut_Table_Body"></tbody>
-		</table>
-	</div>
-	<div class="table2-box">
-		<button onclick="generateLut()">Generate LUT</button><br/>
-		<p>const unsigned char VCOM_LUT_R20H [42] = { <b>// need 43</b></p>
-		<br/>
-		<textarea id="llut" rows="10" cols="70">
-0x40, 0x17, 0x00, 0x00, 0x00, 0x02,
-0x90, 0x0F, 0x0F, 0x00, 0x00, 0x01,
-0x40, 0x0A, 0x00, 0x00, 0x00, 0x02,
-0xA0, 0x0E, 0x0E, 0x00, 0x00, 0x02,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-		</textarea>
-		<button onclick="parseLut()">Parse LUT</button><br/>
-		<label>Resize: </label><input id="sizeLutDrw" type="number" value="3"/>
-		<br/>
-		<canvas id="myCanvas" width="700" height="600" style="border:1px solid #d3d3d3;">
-			Your browser does not support the HTML5 canvas tag.
-		</canvas>
-	 </div>
-  
-</div>
-<div id="vcom_lut" class="tabcontent">
-	<div class="table1-box">
+<div class="Row">
+<div class="Column">
 		<table id="vcom_lut_Table">
 		  <thead>
 			<tr>
-			  <th>LUT</th>
+			  <th colspan="6">LUT</th>
+			</tr>
+			<tr>
+			  <th>Nr:</th>
 			  <th colspan="5">VCOM</th>
 			</tr>
 		  </thead>
 		  <tbody id="vcom_lut_Table_Body"></tbody>
 		</table>
-	</div>
-	<div class="table2-box">
-		<button onclick="generateVcomLut()">Generate VCOM LUT </button><br/>
-		<p>const unsigned char VCOM_LUT_R20H [44] = {<b>// need 45</b></p>
+
+</div>
+<div class="Column">
+		<table id="lut_Table">
+		  <thead>
+			<tr>
+			  <th colspan="6">LUT</th>
+			</tr>
+			<tr>
+			  <th>Nr:</th>
+			  <th colspan="5">(R21H) (R22H) (R23H) (R24H)</th>
+			</tr>
+			
+		  </thead>
+		  <tbody id="lut_Table_Body"></tbody>
+		</table>
+
+
+</div>
+
+
+
+<div class="Column">
+<div style="position: fixed;">
+		<label>Zoom : </label><input id="sizeLutDrw" type="number" value="3"/> 
+		<button onclick="drawLut()">Draw result</button>
 		<br/>
-		<textarea id="vcomlut" rows="10" cols="50">
+		<canvas id="myCanvas" width="650" height="600" style="border:1px solid #d3d3d3;">
+			Your browser does not support the HTML5 canvas tag.
+		</canvas>
+</div>
+
+</div>
+</div>
+
+<div class="Row">
+<div class="Column">
+		<button onclick="generateVcomLut()">Generate VCOM LUT </button><br/>
+		<b>// need 45</b>
+		<p>const unsigned char VCOM_LUT_R20H [44] = {</p>
+		<br/>
+		<textarea id="vcomlut" rows="10" cols="48">
     0x00, 0x08, 0x00, 0x00, 0x00, 0x02,
     0x60, 0x28, 0x28, 0x00, 0x00, 0x01,
     0x00, 0x14, 0x00, 0x00, 0x00, 0x01,
@@ -704,14 +663,37 @@ function getValue(indx, arr){
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00,
 		</textarea>
-		<button onclick="parseVcomLut()">Parse LUT</button><br/>
-		
-	  </div>
-  
+		</br>
+		<button onclick="parseVcomLut()">Parse VCOM LUT</button>
 </div>
-<div id="pica" class="tabcontent">
-<img src="Lut.png"/>
+<div class="Column">
+		<button onclick="generateLut()">Generate LUT</button><br/>
+		<b>// need 43</b>
+		<p>const unsigned char VCOM_LUT_R20H [42] = {</p>
+		<br/>
+		<textarea id="llut" rows="10" cols="45">
+0x40, 0x17, 0x00, 0x00, 0x00, 0x02,
+0x90, 0x0F, 0x0F, 0x00, 0x00, 0x01,
+0x40, 0x0A, 0x00, 0x00, 0x00, 0x02,
+0xA0, 0x0E, 0x0E, 0x00, 0x00, 0x02,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+		</textarea>
+		<br/>
+		<button onclick="parseLut()">Parse LUT</button>
 </div>
+</div>
+
+<div id="pica" class="tabcontent1">
+<br/>
+	SPECIFICATION IL0373 (<a href="https://www.e-paper-display.com/IL0373990b.pdf">IL0373990b<a/>)
+	<br/>
+	<img src="Lut.png" width="750px"/>
+</div>
+
+
+
 <script>
 	loadInit();
 </script>
