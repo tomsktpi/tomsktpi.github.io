@@ -494,6 +494,9 @@ function drawDifference(ctx, phasLutArr, phasVcomArr){
 
 	//if (phasLutArr.length < 1 || phasVcomArr.length < 1);
 	//return;
+	
+	
+	ctx.fillText("Applied electrical voltage between VCOM and an GATE. VCOM - center line (top of display)", 10, 575);
 
 	var center = 480;
 	ctx.strokeStyle = "#000000";
@@ -637,7 +640,7 @@ function getValue(indx, arr){
 <div class="Column">
 <div style="position: fixed;">
 		<label>Zoom : </label><input id="sizeLutDrw" type="number" value="3"/> 
-		<button onclick="drawLut()">Draw result</button>
+		<button onclick="drawLut()">Draw result</button>  BLACK is HIGH
 		<br/>
 		<canvas id="myCanvas" width="650" height="600" style="border:1px solid #d3d3d3;">
 			Your browser does not support the HTML5 canvas tag.
