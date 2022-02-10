@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+input[type="radio"] {
+	width: 30px;
+}
+input[type="number"] {
+	width: 50px;
+}
+table, th, td {
+  border: 1px #ccc;
+  border-collapse: collapse;
+  border-style: groove;
+  white-space: pre;
+}
+
+.leftphase {
+  background-color: #d3d3d36e;
+
+}
+
+</style>
+<script type="text/javascript">
+
+var baseObj;
+var groupId = 0;
+function loadInit(){
+
+	baseObj = parseLut();
+	
+	setBaseSettings(baseObj);
+	setLutGroup(baseObj, 0);
+}
+
+function setLutGroup(LUT, idx){
+
+	document.querySelector('label[id="lgroup"]').innerHTML = "GROUP " + idx;
+	document.querySelector('input[id="vFR"]').value = LUT.FR[idx];
+	const par = LUT.PAR[idx];
+	document.querySelector('input[id="vRP"]').value = par.RP;
+	document.querySelector('input[id="vSRAB"]').value = par.SR_AB;
+	document.querySelector('input[id="vSRCD"]').value = par.SR_CD;
+	document.querySelector('input[id="vTRA"]').value = par.TP_A;
+	document.querySelector('input[id="vTRB"]').value = par.TP_B;
+	document.querySelector('input[id="vTRC"]').value = par.TP_C;
+	document.querySelector('input[id="vTRD"]').value = par.TP_D;
+	
+	var droupIdx = 0;
+	var name;
+	for (var i=0; i< 4; i++){
+		for(var a=0; a< 4; a++){
+			droupIdx = 4 * idx + a;
+			name = "L"+ i + "_" + a;
+			document.querySelector('input[name="'+name+'"][value="'+LUT.LUT[i][droupIdx]+'"]').checked = "checked";
+		}
+	}
+	
+	for(var a=0; a< 4; a++){
+		droupIdx = 4 * idx + a;
+		name = "L4_" + a;
+		document.querySelector('input[name="'+name+'"][value="'+LUT.LUT[4][droupIdx]+'"]').checked = "checked";
+	}
+	droupIdx = 2 * idx;
+	document.querySelector('input[name="X0"][value="'+LUT.XON[droupIdx]+'"]').checked = "checked";
+	document.querySelector('input[name="X1"][value="'+LUT.XON[droupIdx + 1]+'"]').checked = "checked";
+
+}
+
+function setBaseSettings(LUT){
+	setSelectOption(document.querySelector('select[id="lutend"]'),LUT.EOPT.toString());
+	setSelectOption(document.querySelector('select[id="gVGH"]'), IntToHex(LUT.VGH)+"h");
+	setSelectOption(document.querySelector('select[id="sVSH1"]'), IntToHex(LUT.VSH1)+"h");
+	setSelectOption(document.querySelector('select[id="sVSH2"]'), IntToHex(LUT.VSH2)+"h");
+	setSelectOption(document.querySelector('select[id="cVSL"]'), IntToHex(LUT.VSL)+"h");
+	setSelectOption(document.querySelector('select[id="cVCOM"]'), IntToHex(LUT.VCOM)+"h");
+}
+function readSelectOption(control, def){
+	//console.log(control.value);
+	if (control.value == 'Other')
+		return def;
+	return HexToInt(control.value.substring(0,2));
+}
+
+function readBaseSettings(LUT){
+	LUT.EOPT = parseInt(document.querySelector('select[id="lutend"]').value);
+	LUT.VGH = readSelectOption(document.querySelector('select[id="gVGH"]'),1);//, IntToHex(LUT.VGH)+"h");
+	LUT.VSH1 = readSelectOption(document.querySelector('select[id="sVSH1"]'), 76);//, IntToHex(LUT.VSH1)+"h");
+	LUT.VSH2 = readSelectOption(document.querySelector('select[id="sVSH2"]'), 140);//, IntToHex(LUT.VSH2)+"h");
+	LUT.VSL = readSelectOption(document.querySelector('select[id="cVSL"]'), 9);//, IntToHex(LUT.VSL)+"h");
+	LUT.VCOM = readSelectOption(document.querySelector('select[id="cVCOM"]'), 54);//, IntToHex(LUT.VCOM)+"h");*/
+}
+
+function setSelectOption(control, value){
+
+	const arr = Array.from(control.options).map(o => o.value);
+	if (arr.includes(value))
+		control.value = value;
+	else
+		control.value = "Other";
+	//console.log(arr);
+}
+
+function IntToHex(value){
+  return parseInt(value).toString(16).padStart(2, '0').toUpperCase();
+}
+
+function HexToInt(hex){
+	return parseInt(hex, 16);
+}
+
+function splitByteTo4(val){
+	return val.toString(2).padStart(8, '0').match(/.{1,2}/g)
+}
+function splitByteTo8(val){
+	return val.toString(2).padStart(8, '0').match(/.{1,1}/g)
+}
+
+function splitParToObj(arr){
+	return {TP_A:arr[0],TP_B:arr[1],SR_AB:arr[2],TP_C:arr[3],TP_D:arr[4],SR_CD:arr[5],RP:arr[6]};
+}
+
+
+function parseLut(){
+
+	var input = document.getElementById("fulllut").value.replace(/,\s*$/s, "");
+	
+	if (input.length == 0)
+		return;
+	
+	var arr = input.split(",");
+	
+	if (arr.length != 159){
+		alert("Lut only 159 bytes");
+		return;
+	}
+
+	var byteArray = arr.map(a => parseInt(a, 16));
+	
+	var lutObj = {LUT:[],PAR:[]};
+	
+	for (var i = 0; i< 5; i++){
+		lutObj.LUT.push([].concat(...byteArray.splice(0, 12).map(a => splitByteTo4(a))));
+		
+	}
+	for (var i = 0; i< 12; i++){
+		lutObj.PAR.push(splitParToObj( byteArray.splice(0, 7)));
+	}
+	lutObj["FR"] = [].concat(...byteArray.splice(0, 6).map(a => [a >> 4, a & 0x0F]));
+	lutObj["XON"] = [].concat(...byteArray.splice(0, 3).map(a => splitByteTo8(a)))  // byteArray.splice(0, 3);
+	lutObj["EOPT"] = byteArray[0];
+	lutObj["VGH"] = byteArray[1];
+	lutObj["VSH1"] = byteArray[2];
+	lutObj["VSH2"] = byteArray[3];
+	lutObj["VSL"] = byteArray[4];
+	lutObj["VCOM"] = byteArray[5];
+	
+	
+	
+	console.log(lutObj);
+	return lutObj;
+}
+
+function toleft(){
+	if (groupId < 1)
+		groupId = 0;
+	else
+		groupId--;
+	setLutGroup(baseObj, groupId);
+}
+
+function toright(){
+	if (groupId > 10)
+		groupId = 11;
+	else
+		groupId++;
+	setLutGroup(baseObj, groupId);
+}
+const IMG_SIZE = 256;
+function drawPicture(ctx, indx) {
+  
+  var position = IMG_SIZE * indx;
+  var img = new Image();
+  img.onload = function() {
+    ctx.drawImage(img, position, 0);
+	drawOnTop(ctx, indx);
+  };
+  img.src = 'LUT1.png';
+}
+
+function getXonText(val){
+	if (val == '0')
+		return "Normal";
+	return "All gate on";
+}
+const lutYpos = [282,368,456,532];
+const lutYposRel = {"00":0,"01":15,"10":-15,"11": 5}
+const lutVcomYposRel = {"00":0,"01":15,"10":-15,"11": 0}
+function drawLutLine(ctx, lInx, pos, val,vcom, tp){
+	
+	var y = lutYpos[pos] - lutYposRel[val] - lutVcomYposRel[vcom];
+	var x = lInx * 64;
+	
+	if (tp == 0){
+		ctx.strokeStyle = "#000000";
+		ctx.setLineDash([5, 3]);
+	}else{
+		ctx.strokeStyle = "red";
+		ctx.setLineDash([]);
+	}
+	
+	ctx.beginPath();
+	ctx.moveTo(x, y);
+	ctx.lineTo(x+64, y);//right(x) down(y)
+	ctx.stroke();
+	
+}
+
+
+function drawOnTop(ctx, indx){
+	var xonPosY = 715;
+	var basePosX = IMG_SIZE * indx;
+	var xonpos = 2 * indx;
+
+
+	ctx.font = "16px bild";
+	ctx.fillText(indx, basePosX + 145, 67);
+	ctx.fillText(getXonText(baseObj.XON[xonpos]), basePosX + 5, xonPosY);
+	ctx.fillText(getXonText(baseObj.XON[xonpos + 1]),basePosX + 135, xonPosY);
+
+	ctx.fillText("Frame rate = "+baseObj.FR[indx],basePosX + 20, xonPosY + 20);
+
+	var groupTP = [];
+	groupTP.push(baseObj.PAR[indx].TP_A);
+	groupTP.push(baseObj.PAR[indx].TP_B);
+	groupTP.push(baseObj.PAR[indx].TP_C);
+	groupTP.push(baseObj.PAR[indx].TP_D);
+
+	ctx.fillText("TP = "+groupTP[0], basePosX + 3, xonPosY - 20);
+	ctx.fillText("TP = "+groupTP[1], basePosX + 70, xonPosY - 20);
+	ctx.fillText("TP = "+groupTP[2], basePosX + 132, xonPosY - 20);
+	ctx.fillText("TP = "+groupTP[3], basePosX + 195, xonPosY - 20);
+	ctx.fillText("SR[AB] = " + baseObj.PAR[indx].SR_AB, basePosX + 20, 106);
+	ctx.fillText("SR[CD] = " + baseObj.PAR[indx].SR_CD, basePosX + 142, 106);
+	ctx.fillText("RP = " + baseObj.PAR[indx].RP, basePosX + 17, 15);
+
+	var lutIndx;
+	for(var i=0; i<4; i++){
+		for(var a=0; a<4; a++){
+			lutIndx = 4 * indx + a;
+			drawLutLine(ctx, lutIndx, i, baseObj.LUT[i][lutIndx], baseObj.LUT[4][lutIndx], groupTP[a]);
+		}
+	
+	
+	}
+
+	/*var center = 282;
+	/*var center = 368;
+	/*var center = 456;
+	/*var center = 532;
+	ctx.setLineDash([]);
+	//ctx.strokeStyle = "#FF0000";
+	ctx.beginPath();
+	ctx.moveTo(0, center);
+	ctx.lineTo(255, center);
+	ctx.stroke();//right(x) down(y)
+	ctx.stroke();*/
+	
+
+}
+
+function parseIntSafe(val, max){
+	var res = parseInt(val);
+	if (res < 0)
+		return 0;
+	if (res > max)
+		return max;
+	return res;
+}
+
+function drawLut(){
+	var canvas = document.getElementById('myCanvas');
+	var ctx = canvas.getContext('2d');
+	
+	drawPicture(ctx, 0);
+	var par;
+	for (var i = 1; i< 11; i++){
+		par = baseObj.PAR[i];
+		if (par.TP_A == 0 && par.TP_B == 0 && par.TP_C == 0 && par.TP_D == 0 )
+			break;
+		if (i > 3)
+			canvas.width += 256;
+		drawPicture(ctx, i);
+	}
+}
+function readLutGroup(LUT, idx){
+	LUT.FR[idx] = parseIntSafe(document.querySelector('input[id="vFR"]').value, 7);
+	LUT.PAR[idx].RP = parseIntSafe(document.querySelector('input[id="vRP"]').value, 255);
+	LUT.PAR[idx].SR_AB = parseIntSafe(document.querySelector('input[id="vSRAB"]').value, 255);
+	LUT.PAR[idx].SR_CD = parseIntSafe(document.querySelector('input[id="vSRCD"]').value, 255);
+	LUT.PAR[idx].TP_A = parseIntSafe(document.querySelector('input[id="vTRA"]').value, 255);
+	LUT.PAR[idx].TP_B = parseIntSafe(document.querySelector('input[id="vTRB"]').value, 255);
+	LUT.PAR[idx].TP_C = parseIntSafe(document.querySelector('input[id="vTRC"]').value, 255);
+	LUT.PAR[idx].TP_D = parseIntSafe(document.querySelector('input[id="vTRD"]').value, 255);
+	
+	var droupIdx = 0;
+	var name;
+	for (var i=0; i< 4; i++){
+		for(var a=0; a< 4; a++){
+			droupIdx = 4 * idx + a;
+			name = "L"+ i + "_" + a;
+			LUT.LUT[i][droupIdx] = document.querySelector('input[name="'+name+'"]:checked').value;
+		}
+	}
+	for(var a=0; a< 4; a++){
+		droupIdx = 4 * idx + a;
+		name = "L4_" + a;
+		LUT.LUT[4][droupIdx] = document.querySelector('input[name="'+name+'"]:checked').value;
+	}
+	droupIdx = 2 * idx;
+	LUT.XON[droupIdx] = document.querySelector('input[name="X0"]:checked').value;
+	LUT.XON[droupIdx + 1] = document.querySelector('input[name="X1"]:checked').value;
+
+}
+function updateLut(){
+	readBaseSettings(baseObj);
+	readLutGroup(baseObj, groupId);
+
+}
+
+function hexFromBin(arr){
+	var result = arr[0]+arr[1]+arr[2]+arr[3];
+	return "0x" +  parseInt(result,2).toString(16).padStart(2, '0').toUpperCase();
+}
+
+function IntToHex(value){
+	return "0x" +  value.toString(16).padStart(2, '0').toUpperCase()+", "
+}
+function getHexFromPAR(par){
+//return {TP_A:arr[0],TP_B:arr[1],SR_AB:arr[2],TP_C:arr[3],TP_D:arr[4],SR_CD:arr[5],RP:arr[6]};
+	return IntToHex(par.TP_A)+IntToHex(par.TP_B)+IntToHex(par.SR_AB)+IntToHex(par.TP_C)+IntToHex(par.TP_D)+IntToHex(par.SR_CD)+IntToHex(par.RP)+"\r\n"
+}
+function compileLut(){
+	var outstring = "";
+	var indx = 0;
+	for (var i = 0; i< 5; i++){
+		for (var a = 0; a< 11; a++){
+			indx = 4*a;
+			 outstring += (hexFromBin(baseObj.LUT[i].slice(indx,indx+4))+ ", ");
+		}
+		outstring += "\r\n";
+	}
+	for (var i = 0; i< 12; i++){
+		outstring += getHexFromPAR(baseObj.PAR[i]);
+	}
+	var tmp = 0;
+	for (var i = 0; i< 12; i += 2){
+		outstring += IntToHex((baseObj.FR[i] << 4) + baseObj.FR[i + 1]);
+	}
+	outstring += "\r\n";
+	for (var i = 0; i< 3; i++){
+		indx = 8 * i;
+		outstring +=(hexFromBin(baseObj.XON.slice(indx, indx + 8).join("")) + ", ")
+	}
+	outstring += "\r\n";
+	outstring += IntToHex(baseObj.EOPT);
+	outstring += IntToHex(baseObj.VGH);
+	outstring += IntToHex(baseObj.VSH1);
+	outstring += IntToHex(baseObj.VSH2);
+	outstring += IntToHex(baseObj.VSL);
+	outstring += IntToHex(baseObj.VCOM);
+
+	document.getElementById("outlut").value = outstring;
+
+}
+
+
+</script>
+</head>
+<body>
+
+		<table id="lut_table_head">
+		  <thead>
+			<tr>
+			  <th colspan="5"><input type="button" value="<<<" onclick="toleft(this);"/> <label id="lgroup">GROUP 1</label> <input type="button" value=">>>"  onclick="toright(this);"/></th>
+			  <th></th>
+			</tr>
+		  </thead>
+		  <tbody id="lut_table_tbody">
+			<tr>
+				<td colspan="5">RP <input id="vRP" type="number" value="0"/></td>
+				<td><input type="button" value="update group" onclick="updateLut();">				<input type="button" value="draw LUT" onclick="drawLut();">				<input type="button" value="compile LUT" onclick="compileLut();">				<input type="button" value="read LUT" onclick="loadInit();"></td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr>
+				<td colspan="3" class="leftphase">SR[AB]<input id="vSRAB" type="number" value="0"/></td>
+				<td colspan="2">SR[CD]<input id="vSRCD" type="number" value="0"/></td>
+				<td rowspan="18"><canvas id="myCanvas" width="768" height="740" style="border:1px solid #d3d3d3;">
+			Your browser does not support the HTML5 canvas tag.
+		</canvas></td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr>
+				<td colspan="2" class="leftphase">phase A</td>
+				<td class="leftphase">phase B</td>
+				<td>phase C</td>
+				<td>phase D</td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr><td style="border-right-style: hidden;" class="leftphase">VSH1 [01]
+VSH2 [11]
+VSS [00]
+VSL [10]</td><td class="leftphase"><input type="radio" name="L0_0" value="01"/>
+<input type="radio" name="L0_0" value="11"/>
+<input type="radio" name="L0_0" value="00"/>
+<input type="radio" name="L0_0" value="10"/></td>
+				<td class="leftphase"><input type="radio" name="L0_1" value="01"/>
+<input type="radio" name="L0_1" value="11"/>
+<input type="radio" name="L0_1" value="00"/>
+<input type="radio" name="L0_1" value="10"/></td>
+				<td><input type="radio" name="L0_2" value="01"/>
+<input type="radio" name="L0_2" value="11"/>
+<input type="radio" name="L0_2" value="00"/>
+<input type="radio" name="L0_2" value="10"/></td>
+				<td><input type="radio" name="L0_3" value="01"/>
+<input type="radio" name="L0_3" value="11"/>
+<input type="radio" name="L0_3" value="00"/>
+<input type="radio" name="L0_3" value="10"/></td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr><td style="border-right-style: hidden;" class="leftphase">VSH1 [01]
+VSH2 [11]
+VSS [00]
+VSL [10]</td>
+				<td class="leftphase"><input type="radio" name="L1_0" value="01"/>
+<input type="radio" name="L1_0" value="11"/>
+<input type="radio" name="L1_0" value="00"/>
+<input type="radio" name="L1_0" value="10"/></td>
+<td class="leftphase"><input type="radio" name="L1_1" value="01"/>
+<input type="radio" name="L1_1" value="11"/>
+<input type="radio" name="L1_1" value="00"/>
+<input type="radio" name="L1_1" value="10"/></td>
+<td><input type="radio" name="L1_2" value="01"/>
+<input type="radio" name="L1_2" value="11"/>
+<input type="radio" name="L1_2" value="00"/>
+<input type="radio" name="L1_2" value="10"/></td>
+<td><input type="radio" name="L1_3" value="01"/>
+<input type="radio" name="L1_3" value="11"/>
+<input type="radio" name="L1_3" value="00"/>
+<input type="radio" name="L1_3" value="10"/></td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr><td style="border-right-style: hidden;" class="leftphase">VSH1 [01]
+VSH2 [11]
+VSS [00]
+VSL [10]</td>
+				<td class="leftphase"><input type="radio" name="L2_0" value="01"/>
+<input type="radio" name="L2_0" value="11"/>
+<input type="radio" name="L2_0" value="00"/>
+<input type="radio" name="L2_0" value="10"/></td>
+				<td class="leftphase"><input type="radio" name="L2_1" value="01"/>
+<input type="radio" name="L2_1" value="11"/>
+<input type="radio" name="L2_1" value="00"/>
+<input type="radio" name="L2_1" value="10"/></td>
+				<td><input type="radio" name="L2_2" value="01"/>
+<input type="radio" name="L2_2" value="11"/>
+<input type="radio" name="L2_2" value="00"/>
+<input type="radio" name="L2_2" value="10"/></td>
+				<td><input type="radio" name="L2_3" value="01"/>
+<input type="radio" name="L2_3" value="11"/>
+<input type="radio" name="L2_3" value="00"/>
+<input type="radio" name="L2_3" value="10"/></td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr><td style="border-right-style: hidden;" class="leftphase">VSH1 [01]
+VSH2 [11]
+VSS [00]
+VSL [10]</td>
+				<td class="leftphase"><input type="radio" name="L3_0" value="01"/>
+<input type="radio" name="L3_0" value="11"/>
+<input type="radio" name="L3_0" value="00"/>
+<input type="radio" name="L3_0" value="10"/></td>
+				<td class="leftphase"><input type="radio" name="L3_1" value="01"/>
+<input type="radio" name="L3_1" value="11"/>
+<input type="radio" name="L3_1" value="00"/>
+<input type="radio" name="L3_1" value="10"/></td>
+				<td><input type="radio" name="L3_2" value="01"/>
+<input type="radio" name="L3_2" value="11"/>
+<input type="radio" name="L3_2" value="00"/>
+<input type="radio" name="L3_2" value="10"/></td>
+				<td><input type="radio" name="L3_3" value="01"/>
+<input type="radio" name="L3_3" value="11"/>
+<input type="radio" name="L3_3" value="00"/>
+<input type="radio" name="L3_3" value="10"/></td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr><td style="border-right-style: hidden;" class="leftphase">VSH1 [01]
+DCVCOM [00]
+VSL [10]</td>
+				<td class="leftphase"><input type="radio" name="L4_0" value="01"/>
+<input type="radio" name="L4_0" value="00"/>
+<input type="radio" name="L4_0" value="10"/></td>
+				<td class="leftphase"><input type="radio" name="L4_1" value="01"/>
+<input type="radio" name="L4_1" value="00"/>
+<input type="radio" name="L4_1" value="10"/></td>
+				<td><input type="radio" name="L4_2" value="01"/>
+<input type="radio" name="L4_2" value="00"/>
+<input type="radio" name="L4_2" value="10"/></td>
+				<td><input type="radio" name="L4_3" value="01"/>
+<input type="radio" name="L4_3" value="00"/>
+<input type="radio" name="L4_3" value="10"/></td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr>
+				<td colspan="2" class="leftphase">TP A (number of frames)
+<input id="vTRA" type="number" value="0"/></td>
+				<td class="leftphase">TP B
+<input id="vTRB" type="number" value="0"/></td>
+				<td>TP C
+<input id="vTRC" type="number" value="0"/></td>
+				<td>TP D
+<input id="vTRD" type="number" value="0"/></td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr>
+				<td colspan="3" class="leftphase">XON Normal     <input type="radio" name="X0" value="0" checked="checked"/>
+XON All gate on<input type="radio" name="X0" value="1"/></td>
+				<td colspan="2">XON Normal     <input type="radio" name="X1" value="0" checked="checked"/>
+XON All gate on<input type="radio" name="X1" value="1"/></td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr>
+				<td colspan="5">FR <input id="vFR" type="number" value="0"/>  frame rate</td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr>
+				<td colspan="5" style="background-color:gray;"> </td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr>
+				<td colspan="5">Option for LUT end
+<select id="lutend">
+						<option value="34">Normal</option>
+						<option value="7">Source output level keep 
+previous output before power off</option>
+						<option value="Other">Error. Select Only 2 first!</option>
+					</select>
+				</td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr>
+				<td colspan="5">Gate Driving voltage VGH=<select id="gVGH">
+<option value="00h">20</option>
+<option value="03h">10 </option>
+<option value="04h">10.5 </option>
+<option value="05h">11 </option>
+<option value="06h">11.5 </option>
+<option value="07h">12 </option>
+<option value="08h">12.5 </option>
+<option value="07h">12 </option>
+<option value="08h">12.5 </option>
+<option value="09h">13 </option>
+<option value="0Ah">13.5 </option>
+<option value="0Bh">14 </option>
+<option value="0Ch">14.5</option>
+<option value="0Dh">15</option>
+<option value="0Eh">15.5</option>
+<option value="0Fh">16 </option>
+<option value="10h">16.5 </option>
+<option value="11h">17 </option>
+<option value="12h">17.5</option>
+<option value="13h">18</option>
+<option value="14h">18.5 </option>
+<option value="15h">19</option>
+<option value="16h">19.5</option>
+<option value="17h">20 </option>
+<option value="Other">NA</option>
+					</select>
+				</td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr>
+				<td colspan="5">Source Driving voltage VSH1=<select id="sVSH1">
+<option value="23h"> 9 </option>
+<option value="24h"> 9.2 </option>
+<option value="25h"> 9.4 </option>
+<option value="26h"> 9.6 </option>
+<option value="27h"> 9.8 </option>
+<option value="28h"> 10 </option>
+<option value="29h"> 10.2 </option>
+<option value="2Ah"> 10.4 </option>
+<option value="2Bh"> 10.6 </option>
+<option value="2Ch"> 10.8 </option>
+<option value="2Dh"> 11 </option>
+<option value="2Eh"> 11.2 </option>
+<option value="2Fh"> 11.4 </option>
+<option value="30h"> 11.6 </option>
+<option value="31h"> 11.8 </option>
+<option value="32h"> 12 </option>
+<option value="33h"> 12.2 </option>
+<option value="34h"> 12.4</option>
+<option value="35h"> 12.6</option>
+<option value="36h"> 12.8</option>
+<option value="37h"> 13</option>
+<option value="38h"> 13.2</option>
+<option value="39h"> 13.4</option>
+<option value="3Ah"> 13.6</option>
+<option value="3Bh"> 13.8</option>
+<option value="3Ch"> 14</option>
+<option value="3Dh"> 14.2</option>
+<option value="3Eh"> 14.4</option>
+<option value="3Fh"> 14.6</option>
+<option value="40h"> 14.8</option>
+<option value="41h"> 15</option>
+<option value="42h"> 15.2</option>
+<option value="43h"> 15.4</option>
+<option value="44h"> 15.6</option>
+<option value="45h"> 15.8</option>
+<option value="46h"> 16</option>
+<option value="47h"> 16.2</option>
+<option value="48h"> 16.4</option>
+<option value="49h"> 16.6</option>
+<option value="4Ah"> 16.8</option>
+<option value="4Bh"> 17</option>
+<option value="Other"> NA</option>
+					</select>
+				</td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr>
+				<td colspan="5">Source Driving voltage VSH2=<select id="sVSH2">
+<option value="8Eh"> 2.4 </option>
+<option value="8Fh"> 2.5 </option>
+<option value="90h"> 2.6 </option>
+<option value="91h"> 2.7 </option>
+<option value="92h"> 2.8 </option>
+<option value="93h"> 2.9 </option>
+<option value="94h"> 3 </option>
+<option value="95h"> 3.1 </option>
+<option value="96h"> 3.2 </option>
+<option value="97h"> 3.3</option>
+<option value="98h"> 3.4 </option>
+<option value="99h"> 3.5 </option>
+<option value="9Ah"> 3.6 </option>
+<option value="9Bh"> 3.7 </option>
+<option value="9Ch"> 3.8 </option>
+<option value="9Dh"> 3.9 </option>
+<option value="9Eh"> 4 </option>
+<option value="9Fh"> 4.1 </option>
+<option value="A0h"> 4.2 </option>
+<option value="A1h"> 4.3 </option>
+<option value="A2h"> 4.4 </option>
+<option value="A3h"> 4.5 </option>
+<option value="A4h"> 4.6 </option>
+<option value="A5h"> 4.7 </option>
+<option value="A6h"> 4.8 </option>
+<option value="A7h"> 4.9 </option>
+<option value="A8h"> 5 </option>
+<option value="A9h"> 5.1 </option>
+<option value="AAh"> 5.2 </option>
+<option value="ABh"> 5.3 </option>
+<option value="ACh"> 5.4 </option>
+<option value="ADh"> 5.5 </option>
+<option value="AEh"> 5.6 </option>
+<option value="AFh"> 5.7</option>
+<option value="B0h"> 5.8</option>
+<option value="B1h"> 5.9</option>
+<option value="B2h"> 6</option>
+<option value="B3h"> 6.1</option>
+<option value="B4h"> 6.2</option>
+<option value="B5h"> 6.3</option>
+<option value="B6h"> 6.4</option>
+<option value="B7h"> 6.5</option>
+<option value="B8h"> 6.6</option>
+<option value="B9h"> 6.7</option>
+<option value="BAh"> 6.8</option>
+<option value="BBh"> 6.9</option>
+<option value="BCh"> 7</option>
+<option value="BDh"> 7.1</option>
+<option value="BEh"> 7.2</option>
+<option value="BFh"> 7.3</option>
+<option value="C0h"> 7.4</option>
+<option value="C1h"> 7.5</option>
+<option value="C2h"> 7.6</option>
+<option value="C3h"> 7.7</option>
+<option value="C4h"> 7.8</option>
+<option value="C5h"> 7.9</option>
+<option value="C6h"> 8</option>
+<option value="C7h"> 8.1</option>
+<option value="C8h"> 8.2</option>
+<option value="C9h"> 8.3</option>
+<option value="CAh"> 8.4</option>
+<option value="CBh"> 8.5</option>
+<option value="CCh"> 8.6</option>
+<option value="CDh"> 8.7</option>
+<option value="CEh"> 8.8</option>
+<option value="Other"> NA</option>
+					</select>
+				</td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr>
+				<td colspan="5">VSL=<select id="cVSL">
+<option value="0Ah">-5?</option>
+<option value="0Ch"> -5.5</option>
+<option value="0Eh"> -6</option>
+<option value="10h"> -6.5</option>
+<option value="12h"> -7</option>
+<option value="14h"> -7.5</option>
+<option value="16h"> -8</option>
+<option value="18h"> -8.5</option>
+<option value="1Ah"> -9</option>
+<option value="1Ch"> -9.5</option>
+<option value="1Eh"> -10</option>
+<option value="20h"> -10.5</option>
+<option value="22h"> -11</option>
+<option value="24h"> -11.5</option>
+<option value="26h"> -12</option>
+<option value="28h"> -12.5</option>
+<option value="2Ah"> -13</option>
+<option value="2Ch"> -13.5</option>
+<option value="2Eh"> -14</option>
+<option value="30h"> -14.5</option>
+<option value="32h"> -15</option>
+<option value="34h"> -15.5</option>
+<option value="36h"> -16</option>
+<option value="38h"> -16.5</option>
+<option value="3Ah"> -17</option>
+<option value="Other"> NA</option>
+					</select>
+				</td>
+			</tr>
+<!-- ************** ROW ************** -->
+			<tr>
+				<td colspan="5">VCOM=<select id="cVCOM">
+<option value="08h"> -0.2 </option>
+<option value="0Ch"> -0.3 </option>
+<option value="10h"> -0.4 </option>
+<option value="14h"> -0.5 </option>
+<option value="18h"> -0.6 </option>
+<option value="1Ch"> -0.7 </option>
+<option value="20h"> -0.8 </option>
+<option value="24h"> -0.9 </option>
+<option value="28h"> -1 </option>
+<option value="2Ch"> -1.1 </option>
+<option value="30h"> -1.2 </option>
+<option value="34h"> -1.3 </option>
+<option value="38h"> -1.4 </option>
+<option value="3Ch"> -1.5 </option>
+<option value="40h"> -1.6 </option>
+<option value="44h"> -1.7</option>
+<option value="48h"> -1.8</option>
+<option value="4Ch"> -1.9</option>
+<option value="50h"> -2</option>
+<option value="54h"> -2.1</option>
+<option value="58h"> -2.2</option>
+<option value="5Ch"> -2.3</option>
+<option value="60h"> -2.4</option>
+<option value="64h"> -2.5</option>
+<option value="68h"> -2.6</option>
+<option value="6Ch"> -2.7</option>
+<option value="70h"> -2.8</option>
+<option value="74h"> -2.9</option>
+<option value="78h"> -3</option>
+<option value="Other"> NA </option>
+					</select>
+				</td>
+			</tr>
+<!-- ************** ROW ************** -->
+		  </tbody>
+		</table>
+<table><tr><td><textarea id="fulllut" rows="20" cols="70">
+    0x0,0x40,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x80,0x80,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x40,0x40,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x0,0x80,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x0A,0x0,0x0,0x0,0x0,0x0,0x1,  
+    0x1,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x1,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0x22,0x22,0x22,0x22,0x22,0x22,
+    0x0,0x0,0x0,
+    0x22,0x17,0x41,0xB0,0x32,0x36,
+</textarea></td>
+<td><textarea id="outlut" rows="20" cols="70">
+</textarea></td></tr></table>
+<script>
+	loadInit();
+</script>
+</body>
+</html>
