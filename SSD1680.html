@@ -345,13 +345,13 @@ function compileLut(){
 	var outstring = "";
 	var indx = 0;
 	for (var i = 0; i< 5; i++){
-		for (var a = 0; a< 11; a++){
+		for (var a = 0; a < 12; a++){
 			indx = 4*a;
 			 outstring += (hexFromBin(baseObj.LUT[i].slice(indx,indx+4))+ ", ");
 		}
 		outstring += "\r\n";
 	}
-	for (var i = 0; i< 12; i++){
+	for (var i = 0; i < 12; i++){
 		outstring += getHexFromPAR(baseObj.PAR[i]);
 	}
 	var tmp = 0;
