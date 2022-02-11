@@ -326,7 +326,7 @@ function readLutGroup(LUT, idx){
 function updateLut(){
 	readBaseSettings(baseObj);
 	readLutGroup(baseObj, groupId);
-
+	console.log(baseObj);
 }
 
 function hexFromBin(arr){
@@ -334,12 +334,12 @@ function hexFromBin(arr){
 	return "0x" +  parseInt(result,2).toString(16).padStart(2, '0').toUpperCase();
 }
 
-function IntToHex(value){
+function IntToHexStr(value){
 	return "0x" +  value.toString(16).padStart(2, '0').toUpperCase()+", "
 }
 function getHexFromPAR(par){
 //return {TP_A:arr[0],TP_B:arr[1],SR_AB:arr[2],TP_C:arr[3],TP_D:arr[4],SR_CD:arr[5],RP:arr[6]};
-	return IntToHex(par.TP_A)+IntToHex(par.TP_B)+IntToHex(par.SR_AB)+IntToHex(par.TP_C)+IntToHex(par.TP_D)+IntToHex(par.SR_CD)+IntToHex(par.RP)+"\r\n"
+	return IntToHexStr(par.TP_A)+IntToHexStr(par.TP_B)+IntToHexStr(par.SR_AB)+IntToHexStr(par.TP_C)+IntToHexStr(par.TP_D)+IntToHexStr(par.SR_CD)+IntToHexStr(par.RP)+"\r\n"
 }
 function compileLut(){
 	var outstring = "";
@@ -356,7 +356,7 @@ function compileLut(){
 	}
 	var tmp = 0;
 	for (var i = 0; i< 12; i += 2){
-		outstring += IntToHex((baseObj.FR[i] << 4) + baseObj.FR[i + 1]);
+		outstring += IntToHexStr((baseObj.FR[i] << 4) + baseObj.FR[i + 1]);
 	}
 	outstring += "\r\n";
 	for (var i = 0; i< 3; i++){
@@ -364,15 +364,15 @@ function compileLut(){
 		outstring +=(hexFromBin(baseObj.XON.slice(indx, indx + 8).join("")) + ", ")
 	}
 	outstring += "\r\n";
-	outstring += IntToHex(baseObj.EOPT);
-	outstring += IntToHex(baseObj.VGH);
-	outstring += IntToHex(baseObj.VSH1);
-	outstring += IntToHex(baseObj.VSH2);
-	outstring += IntToHex(baseObj.VSL);
-	outstring += IntToHex(baseObj.VCOM);
+	outstring += IntToHexStr(baseObj.EOPT);
+	outstring += IntToHexStr(baseObj.VGH);
+	outstring += IntToHexStr(baseObj.VSH1);
+	outstring += IntToHexStr(baseObj.VSH2);
+	outstring += IntToHexStr(baseObj.VSL);
+	outstring += IntToHexStr(baseObj.VCOM);
 
 	document.getElementById("outlut").value = outstring;
-
+	
 }
 
 
