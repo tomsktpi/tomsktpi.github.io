@@ -68,7 +68,7 @@ RUN git clone https://github.com/volumio/volumio3-os.git build
 После запуска volumio:   
 volumio:volumio   
 
-{Swap}(https://phoenixnap.com/kb/swap-partition) на USB флешку  
+[Swap](https://phoenixnap.com/kb/swap-partition) на USB флешку  
 `sudo fdisk /dev/sda`  
 1 Type p and press Enter for an overview of the disk.  
 2 Type n and press Enter to create a new partition. For partition type, enter p and press Enter.  
@@ -109,7 +109,7 @@ sudo mkswap /dev/sda
 
 `sudo apt-get install libjpeg62-turbo-dev`  
 
-Теперь можно скачать {CamillaGUI}(https://github.com/HEnquist/camillagui-backend)  
+Теперь можно скачать [CamillaGUI](https://github.com/HEnquist/camillagui-backend)  
 
 Так как памяти мало придётся ставить пакеты отдельно  
 `pip3.8 install aiohttp`  
