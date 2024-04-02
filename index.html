@@ -1,13 +1,18 @@
-<head>
-<head/>
+---
+layout: default
+---
 
-<body>
-<a href="IL0373990b_LUT.html">IL0373990b e-paper LUT parser</a><br/>
-<a href="SSD1680.html">SSD1680 e-paper LUT parser</a>
+<div class="posts">
+  {% for post in site.posts %}
+    <article class="post">
 
-<hr/>
-<h2>Сохранёнка</h2>
-<br/>
-<a href="docs/odometer/odometer.html">Универсальный спидометр для мототехники</a><br/>
-<a href="docs/avensis/camera.html">Камеры на Avensis</a>
-</body>
+      <h1><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h1>
+
+      <div class="entry">
+        {{ post.excerpt }}
+      </div>
+
+      <a href="{{ site.baseurl }}{{ post.url }}" class="read-more">Read More</a>
+    </article>
+  {% endfor %}
+</div>
