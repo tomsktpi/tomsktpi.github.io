@@ -57,7 +57,11 @@ RUN git clone https://github.com/volumio/volumio3-os.git build
 
 В терминале:   
 `cd ./build`  
-`/build.sh -b armv7 -d orangepipc -v 2.0`  
+`/build.sh -b armv7 -d orangepipc -v 3.631`    
+
+Желаемую версию можно глянуть [тут](https://volumio.com/get-started/)   
+
+Aрхитектуру и платформу смотреть [тут](https://github.com/volumio/volumio3-os/tree/master/recipes/devices)  
 
 Скачать имидж:   
 `docker ps`  
@@ -65,8 +69,15 @@ RUN git clone https://github.com/volumio/volumio3-os.git build
 `docker cp {CONTAINER ID}:/opt/build/Volumio-2.0-2024-03-30-orangepipc.zip Volumio-2.0-2024-03-30-orangepipc.zip`  
 
 
-После запуска volumio:   
+
+
+**После запуска volumio на устройстве:**   
 volumio:volumio   
+
+`cd \opt`  
+`sudo mkdir *чегототам*`  
+`sudo chown volumio *чегототам*`  
+`cd *чегототам*`  
 
 [Swap](https://phoenixnap.com/kb/swap-partition) на USB флешку  
 `sudo fdisk /dev/sda`  
@@ -83,8 +94,10 @@ sudo mkswap /dev/sda
 Готовим среду для Питона 3.8   
 `sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev`  
 
-`https://community.home-assistant.io/t/python-install-on-raspberry-pi-os/241558`  
+[Тут](https://community.home-assistant.io/t/python-install-on-raspberry-pi-os/241558) взял  
 `export version=3.8.1`  
+3.8.19 не встала
+
 `wget https://www.python.org/ftp/python/$version/Python-$version.tgz`  
 `tar zxf Python-$version.tgz`  
 `cd Python-$version`  
@@ -109,9 +122,11 @@ sudo mkswap /dev/sda
 
 `sudo apt-get install libjpeg62-turbo-dev`  
 
+
+
 Теперь можно скачать [CamillaGUI](https://github.com/HEnquist/camillagui-backend)  
 
-Так как памяти мало придётся ставить пакеты отдельно  
+Так как памяти мало придётся ставить пакеты не только из requirements, но и ещё разбить их заисимости отдельно  
 `pip3.8 install aiohttp`  
 `pip3.8 install numpy==1.24.4`   
 `pip3.8 install matplotlib==3.7.5`  
