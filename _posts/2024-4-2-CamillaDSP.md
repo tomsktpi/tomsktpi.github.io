@@ -7,7 +7,7 @@ title: CamillaDSP 2 для Volumio на OrangePi
 
 docker-compose.yml   
 
-```
+``
 version: '2'
 services:
   volumio:
@@ -15,11 +15,11 @@ services:
     tty: true
     stdin_open: true
     privileged: true
-```
+``
 
 
 Dockerfile   
-```
+~~~
 FROM debian:latest
 
 RUN apt-get update
@@ -53,7 +53,7 @@ RUN apt-get install -y zip
 WORKDIR /opt
 RUN git clone https://github.com/volumio/volumio3-os.git build
 
-```
+~~~
 
 В терминале:   
 `cd ./build`  
@@ -94,7 +94,7 @@ sudo mkswap /dev/sda
 Готовим среду для Питона 3.8   
 `sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev`  
 
-[Тут](https://community.home-assistant.io/t/python-install-on-raspberry-pi-os/241558) взял  
+[Тут](https://community.home-assistant.io/t/python-install-on-raspberry-pi-os/241558) инструкцию взял  
 `export version=3.8.1`  
 3.8.19 не встала
 
