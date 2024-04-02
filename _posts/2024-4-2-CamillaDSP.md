@@ -7,7 +7,7 @@ title: CamillaDSP 2 для Volumio на OrangePi
 
 docker-compose.yml   
 
-``
+```
 version: '2'
 services:
   volumio:
@@ -15,7 +15,7 @@ services:
     tty: true
     stdin_open: true
     privileged: true
-``
+```
 
 
 Dockerfile   
