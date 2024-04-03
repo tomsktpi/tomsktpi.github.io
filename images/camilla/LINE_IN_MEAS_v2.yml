@@ -1,0 +1,148 @@
+devices:
+  adjust_period: 3
+  capture:
+    channels: 2
+    device: hw:ICUSBAUDIO7D,0,0
+    format: S16LE
+    type: Alsa
+  capture_samplerate: 44100
+  chunksize: 2048
+  enable_rate_adjust: false
+  enable_resampling: false
+  playback:
+    channels: 8
+    device: hw:ICUSBAUDIO7D,0
+    format: S16LE
+    type: Alsa
+  queuelimit: 4
+  rate_measure_interval: 1
+  resampler_type: AccurateAsync
+  samplerate: 48000
+  silence_threshold: 0
+  silence_timeout: 0
+  stop_on_rate_change: false
+  target_level: 1024
+filters:
+  TweetDalay:
+    parameters:
+      delay: 0.25
+      subsample: false
+      unit: ms
+    type: Delay
+  TweetInvert:
+    parameters:
+      gain: 0
+      inverted: true
+      mute: false
+    type: Gain
+  TwetterLow:
+    parameters:
+      freq: 2400
+      order: 2
+      type: ButterworthHighpass
+    type: BiquadCombo
+mixers:
+  2Chnnels2mono:
+    channels:
+      in: 8
+      out: 8
+    mapping:
+    - dest: 0
+      mute: false
+      sources:
+      - channel: 0
+        gain: 0
+        inverted: false
+        mute: false
+      - channel: 1
+        gain: 0
+        inverted: false
+        mute: false
+    - dest: 4
+      mute: false
+      sources:
+      - channel: 4
+        gain: 0
+        inverted: false
+        mute: false
+    - dest: 6
+      mute: false
+      sources:
+      - channel: 6
+        gain: 0
+        inverted: false
+        mute: false
+  to4chan:
+    channels:
+      in: 2
+      out: 8
+    mapping:
+    - dest: 0
+      mute: false
+      sources:
+      - channel: 0
+        gain: -3
+        inverted: false
+        mute: false
+    - dest: 1
+      mute: false
+      sources:
+      - channel: 1
+        gain: -3
+        inverted: false
+        mute: false
+    - dest: 4
+      mute: false
+      sources:
+      - channel: 0
+        gain: -3
+        inverted: false
+        mute: false
+    - dest: 6
+      mute: false
+      sources:
+      - channel: 0
+        gain: -3
+        inverted: false
+        mute: false
+    - dest: 2
+      mute: true
+      sources:
+      - channel: 1
+        gain: 0
+        inverted: false
+        mute: false
+    - dest: 5
+      mute: true
+      sources:
+      - channel: 1
+        gain: 0
+        inverted: false
+        mute: false
+      - channel: 1
+        gain: 0
+        inverted: false
+        mute: false
+pipeline:
+- name: to4chan
+  type: Mixer
+- channel: 0
+  names: []
+  type: Filter
+- channel: 1
+  names: []
+  type: Filter
+- channel: 4
+  names: []
+  type: Filter
+- channel: 3
+  names: []
+  type: Filter
+- channel: 4
+  names: []
+  type: Filter
+- channel: 6
+  names: []
+  type: Filter
+- name: 2Chnnels2mono
+  type: Mixer

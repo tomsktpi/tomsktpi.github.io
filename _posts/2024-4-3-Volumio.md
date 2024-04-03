@@ -6,7 +6,7 @@ title: Настройка CamillaDSP для CM6206
 Внешняя USB звуковая карта на cm6206 7.1  
 В линуксе как ICUSBAUDIO7D  
 
-	![Карта на алике](../images/camilla/cm6206.png){:class="img-responsive"}  
+![Карта на алике](../images/camilla/cm6206.png){:class="img-responsive"}  
 
 **Понадобится**  
 1. Raspberry Pi или PC (X86/X64)  
@@ -25,7 +25,7 @@ title: Настройка CamillaDSP для CM6206
 В секции плагины - поставить FusionDSP
 В настройках плагина выбрать  Pure CamillaDSP gui  
 
-	![Вот так](../images/camilla/FusionDSPsettings.png)  
+![Вот так](../images/camilla/FusionDSPsettings.png)  
 
 Жмакнуть кнопку Access to Camilla gui  
 
@@ -57,5 +57,23 @@ F6 для выбора карты (у меня ICUSBAUDIO7D), на вход вы
 По результатам  разработать фильтры, добавить в Filters и их добавить в Pipeline  
 
 Добавить задержки, инерсию канала - для получения красивого импульса  
+
+В [этом](https://www.youtube.com/watch?v=5x1hHGyCs_U) видео про импульс есть, ну и метод настройки  
+
+Импульс без задержки твитера  
+
+![Импульс без задержки](../images/camilla/StepNoDelay.png)  
+
+Стремиться надо примерно к этому..
+
+![Импульс с задержкой](../images/camilla/StepWithDelay.png)  
+
+![задержка](../images/camilla/tweetDelay.png)  
+
+
+
+
+
+
 
 
